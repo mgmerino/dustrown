@@ -53,3 +53,26 @@ Package names vary by distribution.
 ## Notes for i3/minimal WMs
 
 Menus are rendered inside the app window and do not depend on desktop/global menu integrations.
+
+## GitHub Actions Release Pipeline
+
+This repository includes a cross-platform release workflow at `.github/workflows/release.yml`.
+
+- Builds release artifacts for:
+  - Linux `x86_64-unknown-linux-gnu`
+  - Windows `x86_64-pc-windows-msvc`
+- Trigger options:
+  - push a tag matching `v*` (for example `v0.2.0`)
+  - run manually with GitHub Actions `workflow_dispatch`
+- Release artifacts produced:
+  - `dustrown-linux-x86_64.tar.gz`
+  - `dustrown-windows-x86_64.zip`
+
+### Create a tagged release
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+When the tag workflow completes, GitHub Release assets are attached automatically.
