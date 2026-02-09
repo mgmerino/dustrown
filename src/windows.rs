@@ -118,7 +118,8 @@ fn open_path(
             ));
         }
         Err(err) => {
-            let escaped = html_escape::encode_text(&err.to_string());
+            let error_text = err.to_string();
+            let escaped = html_escape::encode_text(&error_text);
             state.source_markdown = None;
             state.rendered_html = Some(format!("<h2>Could not open file</h2><p>{escaped}</p>"));
             refresh_view(webview, state);
