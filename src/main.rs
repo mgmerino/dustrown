@@ -5,6 +5,7 @@ use std::{
     rc::Rc,
 };
 
+use ammonia::Builder as HtmlSanitizer;
 use dark_light::Mode;
 use gtk::{gdk, prelude::*};
 use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
@@ -13,7 +14,7 @@ use syntect::{
     html::highlighted_html_for_string,
     parsing::SyntaxSet,
 };
-use webkit2gtk::{WebView, WebViewExt};
+use webkit2gtk::{SettingsExt, WebView, WebViewExt};
 
 const APP_TITLE: &str = "Markdown Viewer";
 
@@ -66,9 +67,21 @@ fn render_markdown(markdown: &str, theme: Theme) -> String {
         .expect("syntect theme available");
 
     let transformed = inject_highlighted_code_blocks(parser, &syntax_set, syntect_theme);
-    let mut output = String::new();
-    html::push_html(&mut output, transformed.into_iter());
-    output
+    let mut rendered = String::new();
+    html::push_html(&mut rendered, transformed.into_iter());
+
+    sanitize_rendered_html(&rendered)
+}
+
+fn sanitize_rendered_html(dirty_html: &str) -> String {
+    let mut sanitizer = HtmlSanitizer::default();
+    sanitizer.add_tag_attributes("a", &["href", "title"]);
+    sanitizer.add_tag_attributes("img", &["src", "alt", "title"]);
+    sanitizer.add_tag_attributes("code", &["class"]);
+    sanitizer.add_tag_attributes("pre", &["class", "style"]);
+    sanitizer.add_tag_attributes("span", &["class", "style"]);
+
+    sanitizer.clean(dirty_html).to_string()
 }
 
 fn inject_highlighted_code_blocks<'a>(
@@ -371,6 +384,9 @@ fn main() {
     scroller.set_policy(gtk::PolicyType::Automatic, gtk::PolicyType::Automatic);
 
     let webview = WebView::new();
+    if let Some(settings) = WebViewExt::settings(&webview) {
+        settings.set_enable_javascript(false);
+    }
     scroller.add(&webview);
 
     vbox.pack_start(&menu_bar, false, false, 0);

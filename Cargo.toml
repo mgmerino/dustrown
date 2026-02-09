@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+ammonia = "4"
 dark-light = "1"
 html-escape = "0.2"
 gtk = "0.18"

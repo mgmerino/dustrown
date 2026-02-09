@@ -1,6 +1,8 @@
 # Malicious Markdown Demo (Educational)
 
-This file demonstrates why rendering untrusted Markdown as raw HTML is risky.
+This file demonstrates payload styles that are risky in unsanitized Markdown renderers.
+
+In this project's current hardened build, these payloads are expected to be neutralized.
 
 Use this only for local testing in this repository.
 
@@ -41,4 +43,4 @@ Raw HTML can mimic trusted UI and trick users:
 
 ---
 
-If this content executes/renders as active HTML in the app, the viewer should be considered unsafe for untrusted Markdown until sanitization and script restrictions are in place.
+If this content executes as active HTML in the app, hardening has regressed and should be treated as a security bug.

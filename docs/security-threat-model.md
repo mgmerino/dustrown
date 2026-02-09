@@ -1,25 +1,24 @@
 # Security Threat Model
 
-This app renders Markdown as HTML in a WebKit view. That is convenient, but it is not safe by default for untrusted files.
+This app renders Markdown as HTML in a WebKit view. That is convenient, and now includes baseline hardening, but untrusted content should still be treated carefully.
 
 ## Current risk level
 
-- **Current posture:** unsafe for untrusted Markdown
-- **Why:** raw HTML from Markdown can be rendered directly
-- **Impact:** JavaScript/HTML payloads may execute in the viewer context
+- **Current posture:** hardened, but not fully sandboxed
+- **Implemented:** HTML sanitization and JavaScript disabled in WebKit settings
+- **Residual risk:** deceptive content, external links/resources, browser engine vulnerabilities
 
-## Why this is possible
+## Implemented mitigations
 
-- Markdown is converted to HTML and then loaded into a browser engine.
-- Many Markdown parsers (including the one used here) allow raw HTML blocks.
-- If JavaScript is enabled, `<script>` tags and inline event handlers may run.
+- Rendered HTML is sanitized with `ammonia` before loading.
+- JavaScript execution is disabled in the embedded webview.
+- Unsafe attributes/tags and dangerous URI schemes are filtered by the sanitizer.
 
 ## What an attacker can do
 
-- Execute JavaScript inside the app's webview.
-- Trigger network requests to attacker-controlled servers.
-- Load external resources (images/scripts/styles) as tracking beacons.
-- Render deceptive UI elements (fake dialogs or login prompts).
+- Embed deceptive-looking content meant to trick users.
+- Include external links/images that leak metadata if opened/loaded.
+- Attempt to exploit browser engine bugs in WebKit.
 
 ## What is usually not possible directly
 
@@ -36,11 +35,11 @@ These are not guarantees. Browser engine vulnerabilities can change the risk pro
 
 ## Recommended hardening
 
-1. Sanitize rendered HTML (e.g. with `ammonia`) before loading it.
-2. Disable JavaScript for Markdown rendering.
-3. Restrict or intercept navigation and external resource loading.
-4. Use process sandboxing for defense-in-depth.
+1. Restrict or intercept navigation and external resource loading.
+2. Optionally disable remote image loading by policy.
+3. Use process sandboxing for defense-in-depth.
+4. Add an explicit "safe mode" indicator in the UI.
 
 ## Educational demo
 
-See `docs/malicious-markdown-demo.md` for a harmless local demonstration showing how untrusted Markdown can still execute active web content.
+See `docs/malicious-markdown-demo.md` for a historical/educational payload sample. With current hardening, those payloads should be neutralized.

@@ -8,6 +8,7 @@ Dead simple Linux desktop Markdown viewer built with Rust, GTK3, and WebKit2GTK.
 - Open/close/toggle/quit with keyboard shortcuts (works well on i3/minimal WMs).
 - Render Markdown as HTML in a desktop window.
 - GitHub-inspired Markdown styling.
+- Baseline hardening for untrusted files (HTML sanitization + JavaScript disabled).
 - Toggle light/dark theme from the menu bar.
 - Close currently opened file without quitting the app.
 
