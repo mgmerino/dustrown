@@ -1,0 +1,12 @@
+[package]
+name = "markdown-viewer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dark-light = "1"
+html-escape = "0.2"
+gtk = "0.18"
+webkit2gtk = "2.0"
+pulldown-cmark = "0.13"
+syntect = "5"
