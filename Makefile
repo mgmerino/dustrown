@@ -5,7 +5,7 @@ DATADIR ?= $(PREFIX)/share
 ICONDIR ?= $(DATADIR)/icons/hicolor/scalable/apps
 APPDIR ?= $(DATADIR)/applications
 DESTDIR ?=
-ICON_SOURCE ?= docs/icon-notebook-glasses.svg
+ICON_SOURCE ?= docs/icon.svg
 
 .PHONY: build release install install-bin install-icon install-desktop uninstall run clean
 

@@ -1,9 +1,20 @@
-# Markdown Viewer
+# Dustrown
+
+[![Build and Release](https://github.com/mgmerino/dustrown/actions/workflows/release.yml/badge.svg)](https://github.com/mgmerino/dustrown/actions/workflows/release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/mgmerino/dustrown?sort=semver)](https://github.com/mgmerino/dustrown/releases)
+![Platform](https://img.shields.io/badge/platform-linux%20%7C%20windows-2ea44f)
+![Rust](https://img.shields.io/badge/rust-stable-orange)
+
+![Dustrown icon](docs/icon.svg)
 
 Dead simple desktop Markdown viewer built with Rust.
 
 - Linux backend: GTK3 + WebKit2GTK
 - Windows backend: wry + WebView2
+
+## Screenshot
+
+<img src="docs/screenshot.png" alt="Dustrown screenshot" width="920" />
 
 ## Features
 
