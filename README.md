@@ -1,6 +1,9 @@
 # Markdown Viewer
 
-Dead simple Linux desktop Markdown viewer built with Rust, GTK3, and WebKit2GTK.
+Dead simple desktop Markdown viewer built with Rust.
+
+- Linux backend: GTK3 + WebKit2GTK
+- Windows backend: wry + WebView2
 
 ## Features
 
@@ -49,6 +52,10 @@ sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev
 ```
 
 Package names vary by distribution.
+
+## Windows Runtime Requirements
+
+Windows backend requires WebView2 runtime (usually present on modern Windows 10/11).
 
 ## Notes for i3/minimal WMs
 
