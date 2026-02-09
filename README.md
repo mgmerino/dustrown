@@ -28,7 +28,7 @@ Release binary:
 
 ```bash
 cargo build --release
-./target/release/markdown-viewer
+./target/release/dustrown
 ```
 
 Shortcuts:

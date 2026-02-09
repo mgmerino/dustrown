@@ -25,7 +25,7 @@ If scripts are not blocked/sanitized, this can execute:
 This demonstrates that the rendered page can make outbound requests:
 
 <script>
-  fetch("https://example.com/markdown-viewer-demo-beacon?ts=" + Date.now())
+  fetch("https://example.com/dustrown-demo-beacon?ts=" + Date.now())
     .then(() => console.log("[demo] outbound request attempted"))
     .catch(() => console.log("[demo] outbound request blocked/failed"));
 </script>
