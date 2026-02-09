@@ -2,14 +2,14 @@ use std::path::Path;
 
 use ammonia::Builder as HtmlSanitizer;
 use dark_light::Mode;
-use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd, html};
 use syntect::{
     highlighting::{Theme as SyntectTheme, ThemeSet},
     html::highlighted_html_for_string,
     parsing::SyntaxSet,
 };
 
-pub const APP_TITLE: &str = "Markdown Viewer";
+pub const APP_TITLE: &str = "Dustrown";
 
 #[derive(Copy, Clone)]
 pub enum Theme {
