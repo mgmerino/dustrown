@@ -5,6 +5,30 @@ use webkit2gtk::{SettingsExt, WebView, WebViewExt};
 
 use crate::core::{self, AppState};
 
+fn apply_loaded_markdown(state: &mut AppState, markdown: String) {
+    state.source_markdown = Some(markdown.clone());
+    state.rendered_html = Some(core::render_markdown(&markdown, state.theme));
+}
+
+fn apply_open_error(state: &mut AppState, error_text: &str) {
+    let escaped = html_escape::encode_text(error_text);
+    state.source_markdown = None;
+    state.rendered_html = Some(format!("<h2>Could not open file</h2><p>{escaped}</p>"));
+}
+
+fn clear_open_file(state: &mut AppState) {
+    state.source_markdown = None;
+    state.rendered_html = None;
+}
+
+fn toggle_theme(state: &mut AppState) {
+    state.theme = state.theme.toggled();
+
+    if let Some(markdown) = state.source_markdown.clone() {
+        state.rendered_html = Some(core::render_markdown(&markdown, state.theme));
+    }
+}
+
 fn refresh_view(webview: &WebView, state: &AppState) {
     let body = state
         .rendered_html
@@ -19,8 +43,7 @@ fn open_path(path: &Path, webview: &WebView, window: &gtk::Window, state: &Rc<Re
         Ok(markdown) => {
             {
                 let mut s = state.borrow_mut();
-                s.source_markdown = Some(markdown.clone());
-                s.rendered_html = Some(core::render_markdown(&markdown, s.theme));
+                apply_loaded_markdown(&mut s, markdown);
                 refresh_view(webview, &s);
             }
             window.set_title(&format!(
@@ -30,12 +53,9 @@ fn open_path(path: &Path, webview: &WebView, window: &gtk::Window, state: &Rc<Re
             ));
         }
         Err(err) => {
-            let error_text = err.to_string();
-            let escaped = html_escape::encode_text(&error_text);
             {
                 let mut s = state.borrow_mut();
-                s.source_markdown = None;
-                s.rendered_html = Some(format!("<h2>Could not open file</h2><p>{escaped}</p>"));
+                apply_open_error(&mut s, &err.to_string());
                 refresh_view(webview, &s);
             }
             window.set_title(core::APP_TITLE);
@@ -185,8 +205,7 @@ pub fn run() {
         close_item.connect_activate(move |_| {
             {
                 let mut s = state.borrow_mut();
-                s.source_markdown = None;
-                s.rendered_html = None;
+                clear_open_file(&mut s);
                 refresh_view(&webview, &s);
             }
             window.set_title(core::APP_TITLE);
@@ -198,12 +217,7 @@ pub fn run() {
         let state = state.clone();
         toggle_theme_item.connect_activate(move |_| {
             let mut s = state.borrow_mut();
-            s.theme = s.theme.toggled();
-
-            if let Some(markdown) = s.source_markdown.clone() {
-                s.rendered_html = Some(core::render_markdown(&markdown, s.theme));
-            }
-
+            toggle_theme(&mut s);
             refresh_view(&webview, &s);
         });
     }
@@ -216,4 +230,78 @@ pub fn run() {
 
     window.show_all();
     gtk::main();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::Theme;
+
+    fn state(theme: Theme, markdown: Option<&str>) -> AppState {
+        let source_markdown = markdown.map(str::to_string);
+        let rendered_html = markdown.map(|m| core::render_markdown(m, theme));
+        AppState {
+            theme,
+            source_markdown,
+            rendered_html,
+        }
+    }
+
+    #[test]
+    fn apply_loaded_markdown_sets_source_and_rendered_html() {
+        let mut app_state = state(Theme::Light, None);
+
+        apply_loaded_markdown(&mut app_state, "# Title".to_string());
+
+        assert_eq!(app_state.source_markdown.as_deref(), Some("# Title"));
+        assert!(app_state
+            .rendered_html
+            .as_deref()
+            .is_some_and(|html| html.contains("<h1>Title</h1>")));
+    }
+
+    #[test]
+    fn apply_open_error_clears_source_and_sets_error_html() {
+        let mut app_state = state(Theme::Dark, Some("# Existing"));
+
+        apply_open_error(&mut app_state, "No such file or directory");
+
+        assert!(app_state.source_markdown.is_none());
+        assert!(app_state
+            .rendered_html
+            .as_deref()
+            .is_some_and(|html| html.contains("Could not open file")));
+    }
+
+    #[test]
+    fn clear_open_file_resets_markdown_state() {
+        let mut app_state = state(Theme::Light, Some("# Existing"));
+
+        clear_open_file(&mut app_state);
+
+        assert!(app_state.source_markdown.is_none());
+        assert!(app_state.rendered_html.is_none());
+    }
+
+    #[test]
+    fn toggle_theme_re_renders_when_markdown_exists() {
+        let mut app_state = state(Theme::Light, Some("# Existing"));
+        let before_source = app_state.source_markdown.clone();
+
+        toggle_theme(&mut app_state);
+
+        assert!(matches!(app_state.theme, Theme::Dark));
+        assert_eq!(app_state.source_markdown, before_source);
+        assert!(app_state.rendered_html.is_some());
+    }
+
+    #[test]
+    fn toggle_theme_only_switches_theme_when_no_markdown_loaded() {
+        let mut app_state = state(Theme::Light, None);
+
+        toggle_theme(&mut app_state);
+
+        assert!(matches!(app_state.theme, Theme::Dark));
+        assert!(app_state.rendered_html.is_none());
+    }
 }
