@@ -301,4 +301,29 @@ mod tests {
         assert!(body.contains("Ctrl+O"));
         assert!(body.contains("Open"));
     }
+
+    #[test]
+    fn fixture_markdown_samples_render_expected_html_snippets() {
+        let basic = include_str!("../tests/fixtures/markdown/basic.md");
+        let table_tasklist = include_str!("../tests/fixtures/markdown/table-tasklist.md");
+        let unsafe_markdown = include_str!("../tests/fixtures/markdown/unsafe.md");
+
+        let basic_html = render_markdown(basic, Theme::Light);
+        assert!(basic_html.contains("<h1>Fixture Title</h1>"));
+        assert!(basic_html.contains("<strong>fixture</strong>"));
+        assert!(basic_html.contains("href=\"https://example.com\""));
+        assert!(basic_html.contains("<pre"));
+
+        let table_html = render_markdown(table_tasklist, Theme::Light);
+        assert!(table_html.contains("<h2>Checklist</h2>"));
+        assert!(table_html.contains("<table>"));
+        assert!(table_html.contains("done"));
+        assert!(table_html.contains("pending"));
+
+        let unsafe_html = render_markdown(unsafe_markdown, Theme::Dark);
+        assert!(!unsafe_html.contains("<script"));
+        assert!(!unsafe_html.contains("javascript:"));
+        assert!(!unsafe_html.contains("onerror="));
+        assert!(unsafe_html.contains("src=\"https://example.com/image.png\""));
+    }
 }
