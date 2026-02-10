@@ -2,7 +2,7 @@ use std::path::Path;
 
 use ammonia::Builder as HtmlSanitizer;
 use dark_light::Mode;
-use pulldown_cmark::{CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd, html};
+use pulldown_cmark::{html, CodeBlockKind, CowStr, Event, Options, Parser, Tag, TagEnd};
 use syntect::{
     highlighting::{Theme as SyntectTheme, ThemeSet},
     html::highlighted_html_for_string,
@@ -244,4 +244,86 @@ fn highlight_code_block(
         let escaped = html_escape::encode_text(code);
         format!("<pre><code>{escaped}</code></pre>")
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn toggled_switches_between_themes() {
+        assert!(matches!(Theme::Light.toggled(), Theme::Dark));
+        assert!(matches!(Theme::Dark.toggled(), Theme::Light));
+    }
+
+    #[test]
+    fn render_markdown_sanitizes_unsafe_html() {
+        let rendered = render_markdown(
+            r#"<script>alert('xss')</script><a href="javascript:alert(1)">click</a>"#,
+            Theme::Light,
+        );
+
+        assert!(!rendered.contains("<script"));
+        assert!(!rendered.contains("javascript:"));
+    }
+
+    #[test]
+    fn render_markdown_renders_fenced_code_blocks() {
+        let rendered = render_markdown("```rust\nfn main() {}\n```", Theme::Dark);
+
+        assert!(rendered.contains("<pre"));
+        assert!(rendered.contains("main"));
+    }
+
+    #[test]
+    fn render_document_applies_theme_palette() {
+        let light = render_document("<p>Hello</p>", Theme::Light);
+        let dark = render_document("<p>Hello</p>", Theme::Dark);
+
+        assert!(light.contains("background: #ffffff"));
+        assert!(dark.contains("background: #0d1117"));
+        assert!(light.contains("<article class=\"markdown-body\"><p>Hello</p></article>"));
+        assert!(dark.contains("<article class=\"markdown-body\"><p>Hello</p></article>"));
+    }
+
+    #[test]
+    fn filename_or_path_prefers_filename_when_present() {
+        let file = Path::new("/tmp/sample.md");
+        let root = Path::new("/");
+
+        assert_eq!(filename_or_path(file), "sample.md");
+        assert_eq!(filename_or_path(root), "/");
+    }
+
+    #[test]
+    fn default_body_contains_open_instruction() {
+        let body = default_body();
+        assert!(body.contains("Ctrl+O"));
+        assert!(body.contains("Open"));
+    }
+
+    #[test]
+    fn fixture_markdown_samples_render_expected_html_snippets() {
+        let basic = include_str!("../tests/fixtures/markdown/basic.md");
+        let table_tasklist = include_str!("../tests/fixtures/markdown/table-tasklist.md");
+        let unsafe_markdown = include_str!("../tests/fixtures/markdown/unsafe.md");
+
+        let basic_html = render_markdown(basic, Theme::Light);
+        assert!(basic_html.contains("<h1>Fixture Title</h1>"));
+        assert!(basic_html.contains("<strong>fixture</strong>"));
+        assert!(basic_html.contains("href=\"https://example.com\""));
+        assert!(basic_html.contains("<pre"));
+
+        let table_html = render_markdown(table_tasklist, Theme::Light);
+        assert!(table_html.contains("<h2>Checklist</h2>"));
+        assert!(table_html.contains("<table>"));
+        assert!(table_html.contains("done"));
+        assert!(table_html.contains("pending"));
+
+        let unsafe_html = render_markdown(unsafe_markdown, Theme::Dark);
+        assert!(!unsafe_html.contains("<script"));
+        assert!(!unsafe_html.contains("javascript:"));
+        assert!(!unsafe_html.contains("onerror="));
+        assert!(unsafe_html.contains("src=\"https://example.com/image.png\""));
+    }
 }
