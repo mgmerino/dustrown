@@ -10,23 +10,7 @@ use tao::{
 use wry::WebViewBuilder;
 
 use crate::core::{self, AppState};
-
-enum AppEvent {
-    Open,
-    Close,
-    ToggleTheme,
-    Quit,
-}
-
-fn parse_app_event(raw: &str) -> Option<AppEvent> {
-    match raw {
-        "open" => Some(AppEvent::Open),
-        "close" => Some(AppEvent::Close),
-        "theme" => Some(AppEvent::ToggleTheme),
-        "quit" => Some(AppEvent::Quit),
-        _ => None,
-    }
-}
+use crate::windows_shared::{self, AppEvent};
 
 fn render_app_shell(content_html: &str, state: &AppState) -> String {
     let body = if content_html.is_empty() {
@@ -35,10 +19,7 @@ fn render_app_shell(content_html: &str, state: &AppState) -> String {
         content_html.to_string()
     };
     let markdown_doc = core::render_document(&body, state.theme);
-
-    let body_start = markdown_doc.find("<body>").unwrap_or(0);
-    let body_end = markdown_doc.rfind("</body>").unwrap_or(markdown_doc.len());
-    let content = &markdown_doc[body_start + 6..body_end];
+    let content = windows_shared::extract_document_body(&markdown_doc);
 
     format!(
         r#"<!doctype html>
@@ -153,7 +134,7 @@ pub fn run() {
 
     let webview = WebViewBuilder::new()
         .with_ipc_handler(move |request| {
-            if let Some(event) = parse_app_event(request.body()) {
+            if let Some(event) = windows_shared::parse_app_event(request.body()) {
                 let _ = proxy.send_event(event);
             }
         })

@@ -1,4 +1,5 @@
 mod core;
+mod windows_shared;
 
 #[cfg(target_os = "linux")]
 mod linux;
